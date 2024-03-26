@@ -16,11 +16,12 @@ namespace BucStop.Controllers
         private readonly MicroClient _httpClient;
         private readonly PlayCountManager _playCountManager;
         private readonly GameService _gameService;
-
+        private readonly IWebHostEnvironment _hostingEnvironment;
         public GamesController(MicroClient games, IWebHostEnvironment webHostEnvironment, GameService gameService)
         {
             _httpClient = games;
             _gameService = gameService;
+            _hostingEnvironment = webHostEnvironment;
 
             // Initialize the PlayCountManager with the web root path and the JSON file name
             _playCountManager = new PlayCountManager(_gameService.GetGames() ?? new List<Game>(), webHostEnvironment);
@@ -83,6 +84,32 @@ namespace BucStop.Controllers
             return games;
         }
 
+        //Processes the Fetch request from the Javascript game
+        [HttpPost]
+        public async Task<IActionResult> SaveScore([FromBody] ScoreModel score)
+        {
+            // Load existing scores from the JSON file
+            var scores = new List<ScoreModel>();
+            var filePath = Path.Combine(_hostingEnvironment.WebRootPath, "scoreData/tetrisScores.json");
+            if (System.IO.File.Exists(filePath))
+            {
+                var json = await System.IO.File.ReadAllTextAsync(filePath);
+                scores = System.Text.Json.JsonSerializer.Deserialize<List<ScoreModel>>(json);
+            }
+
+            // Add the new score
+            scores.Add(score);
+
+            // Save the scores back to the JSON file
+            var serializedScores = System.Text.Json.JsonSerializer.Serialize(scores);
+            await System.IO.File.WriteAllTextAsync(filePath, serializedScores);
+
+            return Ok();
+        }
+        /// <summary>
+        /// Depreciated past this point
+        /// </summary>
+        /// <returns></returns>
         //Takes the user to the deprecated snake page
         public IActionResult Snake()
         {
