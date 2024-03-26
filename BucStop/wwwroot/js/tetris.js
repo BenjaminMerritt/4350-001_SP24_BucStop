@@ -158,6 +158,36 @@ function showGameOver() {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText('GAME OVER! Score: ' + score, canvas.width / 2, canvas.height / 2);
+
+
+    //calling send score function at end of game 
+    console.log("game is over with score =" + score)
+    var finalScore = score
+    sendScore(finalScore)
+
+}
+
+// function to send score to the server via API 
+// using fetch to send a POST request to the server
+function sendScore(score) {
+    fetch('/Games/SaveScore', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ score: score })
+    })
+        //.then(response => response.json())
+        .then(response => {
+            if (response.ok) {
+                console.log('Score saved successfully');
+            } else {
+                console.error('Error saving score:', response.statusText);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 }
 
 const canvas = document.getElementById('game');
